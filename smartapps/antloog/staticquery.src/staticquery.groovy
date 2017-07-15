@@ -28,6 +28,14 @@ preferences {
     section("Battery Group") {
        input "group_batteries", "capability.battery", title: "Select battery powered devices", multiple: true, required: false
     }
+    
+    section("Lock Group") {
+       input "group_locks", "capability.lock", title: "Select lock devices", multiple: true, required: false
+    }
+    
+    section("Temperature Group") {
+       input "group_temperature", "capability.temperatureMeasurement", title: "Select temperature devices", multiple: true, required: false
+    }
 }
 
 def installed() {
@@ -43,16 +51,62 @@ def updated() {
 }
 
 def initialize() {
-	check_batteries()
+    settings["group_locks"].each{
+        log.debug "subscribing to $it"
+        subscribe(it, "lock", lockHandler, [isStateChange: true])
+    }
 }
 
-def check_batteries(){
-	//def size = settings["group_batteries"]?.size() ?: 0
-    settings["group_batteries"].each {
-    	def battery = it.currentValue("battery")
-    	def message = "$it: $battery"
-        if (battery < 40){
-        	sendPush "Low battery ${message}"
-        }
+def lockHandler(event){
+    log.debug "Lock $event"
+}
+
+mappings {
+	path("/list"){
+    	action: [GET: "list"]
     }
+    
+    path("/battery") {
+        action: [GET: "getBattery"]
+    }
+    
+    path("/lock") {
+        action: [GET: "getLock"]
+    }
+    
+    path("/temperature") {
+        action: [GET: "getTemperature"]
+    }
+}
+
+def list(){
+	def response = []
+    response << [endpoint: "/battary", description: "battery level (0-100), interger"]
+    response << [endpoint: "/lock", description: "lock status, 'unlocked' or 'locked'" ]
+    response << [endpoint: "/temperature", description: "termperature value in F"]
+    return response
+}
+
+def getBattery() {
+	def response = []
+    settings["group_batteries"].each {
+        response << [id: it.id, name: it.displayName, value: it.currentValue("battery")]
+    }
+    return response
+}
+
+def getLock() {
+	def response = []
+    settings["group_locks"].each {
+        response << [id: it.id, name: it.displayName, value: it.currentValue("lock")]
+    }
+    return response
+}
+
+def getTemperature() {
+	def response = []
+    settings["group_temperature"].each {
+        response << [id: it.id, name: it.displayName, value: it.currentValue("temperature")]
+    }
+    return response
 }
