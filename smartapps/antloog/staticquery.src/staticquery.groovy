@@ -36,6 +36,10 @@ preferences {
     section("Temperature Group") {
        input "group_temperature", "capability.temperatureMeasurement", title: "Select temperature devices", multiple: true, required: false
     }
+
+    section("Switch Group") {
+       input "group_switches", "capability.light", title: "Select switch devices", multiple: true, required: false
+    }
 }
 
 def installed() {
@@ -77,13 +81,19 @@ mappings {
     path("/temperature") {
         action: [GET: "getTemperature"]
     }
+
+    path("/switch") {
+        action: [GET: "getSwitch"]
+    }
 }
 
 def list(){
 	def response = []
+    response << [app: "StaticQuery", version: "1.0"]
     response << [endpoint: "/battary", description: "battery level (0-100), interger"]
     response << [endpoint: "/lock", description: "lock status, 'unlocked' or 'locked'" ]
     response << [endpoint: "/temperature", description: "termperature value in F"]
+    response << [endpoint: "/switch", description: "switch status, either 'on' or 'off'"]
     return response
 }
 
@@ -107,6 +117,14 @@ def getTemperature() {
 	def response = []
     settings["group_temperature"].each {
         response << [id: it.id, name: it.displayName, value: it.currentValue("temperature")]
+    }
+    return response
+}
+
+def getSwitch() {
+	def response = []
+    settings["group_switches"].each {
+        response << [id: it.id, name: it.displayName, value: it.currentValue("switch")]
     }
     return response
 }
