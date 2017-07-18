@@ -70,32 +70,40 @@ def lockHandler(event){
 }
 
 def setCode(){
-    def response = []
-    def device = request.JSON["device"]
     def slot = request.JSON["slot"].toInteger()
+    def devices = request.JSON["devices"]
     def code = request.JSON["code"]
-    settings["group_locks"].each {
-        if (it.displayName == device || it.id == device){
-            it.setCode(slot, code)
-            response << [id: it.id, 
-                         name: it.displayName, 
-                         value: it.currentValue("lock"), 
-                         command: "set_code",
-                         code: code, 
-                         slot: slot]
+    def response = []
+
+    for (device in devices){
+        log.debug device
+        for (lock in settings["group_locks"]) {
+            if (lock.displayName == device || lock.id == device){
+                lock.setCode(slot, code)
+                response << [id: lock.id, 
+                             name: lock.displayName, 
+                             value: lock.currentValue("lock"), 
+                             command: "set_code",
+                             code: code,
+                             slot: slot]
+            }
         }
     }
     return response
 }
 
 def deleteCode(){
-    def response = []
-    def device = request.JSON["device"]
     def slot = request.JSON["slot"].toInteger()
-    settings["group_locks"].each {
-        if (it.displayName == device || it.id == device){
-            it.deleteCode(slot)
-            response << [id: it.id, name: it.displayName, value: it.currentValue("lock"), command: "delete_code", slot: slot]
+    def devices = request.JSON["devices"]
+    def response = []
+
+    for (device in devices){
+        log.debug device
+        for (lock in settings["group_locks"]) {
+            if (lock.displayName == device || lock.id == device){
+                lock.deleteCode(slot)
+                response << [id: lock.id, name: lock.displayName, value: lock.currentValue("lock"), command: "delete_code", slot: slot]
+            }
         }
     }
     return response
