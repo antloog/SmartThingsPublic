@@ -55,10 +55,6 @@ def updated() {
 }
 
 def initialize() {
-    settings["group_locks"].each{
-        log.debug "subscribing to $it"
-        subscribe(it, "lock", lockHandler, [isStateChange: true])
-    }
 }
 
 def lockHandler(event){

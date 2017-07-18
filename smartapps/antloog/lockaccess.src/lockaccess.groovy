@@ -71,13 +71,32 @@ def lockHandler(event){
 
 def setCode(){
     def response = []
-    def json = request.JSON
-    response << [device: json["device"], code: json["code"]]
+    def device = request.JSON["device"]
+    def slot = request.JSON["slot"].toInteger()
+    def code = request.JSON["code"]
+    settings["group_locks"].each {
+        if (it.displayName == device || it.id == device){
+            it.setCode(slot, code)
+            response << [id: it.id, 
+                         name: it.displayName, 
+                         value: it.currentValue("lock"), 
+                         command: "set_code",
+                         code: code, 
+                         slot: slot]
+        }
+    }
     return response
 }
 
 def deleteCode(){
     def response = []
-
+    def device = request.JSON["device"]
+    def slot = request.JSON["slot"].toInteger()
+    settings["group_locks"].each {
+        if (it.displayName == device || it.id == device){
+            it.deleteCode(slot)
+            response << [id: it.id, name: it.displayName, value: it.currentValue("lock"), command: "delete_code", slot: slot]
+        }
+    }
     return response
 }
