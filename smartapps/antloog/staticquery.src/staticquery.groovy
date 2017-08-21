@@ -40,6 +40,10 @@ preferences {
     section("Switch Group") {
        input "group_switches", "capability.light", title: "Select switch devices", multiple: true, required: false
     }
+    
+    section("Motion Group") {
+       input "group_motion", "capability.motionSensor", title: "Select switch devices", multiple: true, required: false
+    }
 }
 
 def installed() {
@@ -81,6 +85,10 @@ mappings {
     path("/switch") {
         action: [GET: "getSwitch"]
     }
+    
+    path("/motion") {
+        action: [GET: "getMotion"]
+    }
 }
 
 def list(){
@@ -90,6 +98,7 @@ def list(){
     response << [endpoint: "/lock", description: "lock status, 'unlocked' or 'locked'" ]
     response << [endpoint: "/temperature", description: "termperature value in F"]
     response << [endpoint: "/switch", description: "switch status, either 'on' or 'off'"]
+    response << [endpoint: "/motion", description: "motion"]
     return response
 }
 
@@ -121,6 +130,14 @@ def getSwitch() {
 	def response = []
     settings["group_switches"].each {
         response << [id: it.id, name: it.displayName, value: it.currentValue("switch")]
+    }
+    return response
+}
+
+def getMotion() {
+	def response = []
+    settings["group_motion"].each {
+        response << [id: it.id, name: it.displayName, value: it.currentValue("motion")]
     }
     return response
 }
