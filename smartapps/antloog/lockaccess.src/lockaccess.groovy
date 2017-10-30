@@ -69,7 +69,19 @@ def lockHandler(event){
     log.debug "Lock $event"
 }
 
+def list(){
+	def response = []
+    for (lock in settings["group_locks"]) {
+    	response << [id: lock.id, 
+                     name: lock.displayName, 
+                     value: lock.currentValue("lock")
+                     ]
+    }
+    return response
+}
+
 def setCode(){
+	log.debug request.JSON
     def slot = request.JSON["slot"].toInteger()
     def devices = request.JSON["devices"]
     def code = request.JSON["code"]
@@ -89,6 +101,7 @@ def setCode(){
             }
         }
     }
+    log.debug response
     return response
 }
 

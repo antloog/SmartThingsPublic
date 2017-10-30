@@ -13,6 +13,8 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  */
+import groovy.json.JsonSlurper
+ 
 definition(
     name: "StaticQuery",
     namespace: "antloog",
@@ -59,6 +61,31 @@ def updated() {
 }
 
 def initialize() {
+	state.lock_codes = [:]
+    for (lock in settings["group_locks"]) {
+        subscribe(lock, "codeReport", lockEventHandler, [filterEvents:false])
+        log.debug "Subscribing to ${lock}: [${lock.getId()}]"
+        state.lock_codes[lock.getId()] = [:]
+    }
+}
+
+def lockEventHandler(evt) {
+    log.debug "Lock event!"
+    def data = new JsonSlurper().parseText(evt.data)
+	log.debug evt.data
+    def code = data.code
+    def device = evt.getDevice()
+    def device_id = device.getId()
+    def slot = evt.value
+    def entry = [
+    	name: evt.name, 
+        device_id: device_id, 
+        slot: slot, 
+        code: code
+    ]
+    log.debug entry
+    state.lock_codes[device_id][slot] = code
+    log.debug state
 }
 
 def lockHandler(event){
@@ -89,6 +116,10 @@ mappings {
     path("/motion") {
         action: [GET: "getMotion"]
     }
+    
+    path("/lock_codes"){
+    	action: [GET: "lock_codes"]
+    }
 }
 
 def list(){
@@ -99,6 +130,7 @@ def list(){
     response << [endpoint: "/temperature", description: "termperature value in F"]
     response << [endpoint: "/switch", description: "switch status, either 'on' or 'off'"]
     response << [endpoint: "/motion", description: "motion"]
+    response << [endpoint: "/lock_codes", description: "retrieve known lock codes"]
     return response
 }
 
@@ -140,4 +172,10 @@ def getMotion() {
         response << [id: it.id, name: it.displayName, value: it.currentValue("motion")]
     }
     return response
+}
+
+def lock_codes(){
+	def response = []
+    response = state.lock_codes
+    return state.lock_codes
 }
